@@ -1,0 +1,117 @@
+// Reverse-engineering Britney Spears, "Baby one more time", first Number 1 by swedish producer MM.
+
+// chorus
+//  - My lo-neli-ness   - is killing me - -
+//[[- t][t t]     t] [[- t][t t]    t] [t t t t]] // 3-3-2
+
+// verse
+// - Oh ba-by ba-by - how was I supposed to know
+
+// structure: verse, pre, chorus, verse2, pre, chorus, bridge (with B-chorus), chorus, chorus+B-chorus
+setcpm(93/4)
+let chorus_chords = "<Cm G7 Eb [Fm7 G7]>"
+let root = "c3"
+
+// The chorus and verses follow the Prince Principle: they're extremely similar
+// The pre section is different to confuse the listeners
+
+// CHORUS
+
+// Only two rhythmic motives in the chorus, of respective lengths 3 and 2
+let motif1 = "[[- t][t t] [t -]]" // syncopated run of 1/8 notes 
+let motif2 = "[t t t t]" // just 1/8 notes 
+
+// Motif 1 (3-beat long) repeats twice, forming a rhythmic displacement
+// Chorus lines fill 2 bars: [motif1, motif1, motif2], ie (3+3+2) = 8
+
+// and notes follow the chords monotonously (sequences)
+// with ornaments (licks): lower neighbor note first, run-up turn second
+let chorus_line1 = timecat([3, note(root.add(0)).struct(motif1)],
+                           [3, note(root.add("0 0 -1 0 2 0")).struct(motif1)],
+                           [2, note(root.add("7 5 5 3")).struct(motif2)])
+
+let chorus_line2 = timecat([3, note(root.add(3)).struct(motif1)],
+                           [3, note(root.add(3).add("0 0 2 4 5 0")).struct(motif1)],
+                           [2, note(root.add("- 12 11 12")).struct(motif2)])
+
+// 3rd part of the chorus: lots of little variations
+let motif1b = "[[- t][t t] [t t]]" // ELONGATION
+let motif1c = "[[t t][t t] [- -]]" // ANTICIPATION + TRUNCATION
+let motif1d = "[[t@3  t]@2 [t -]]" // ANTICIPATION with TIE/AGOGIC ACCENT
+let motif1e = "[[- -][t t] [t t]]" // DELAYED ENTRY + EXTENSION
+
+let chorus_line3 = timecat([3, note(root.add("0 0 0 0 0 0")).struct(motif1b)],
+                           [3, note(root.add("0 -1 0 2 2 0")).struct(motif1c)],
+                           [2, note(root.add("3 5 7 7")).struct(motif2)])
+
+
+let chorus_line4 = timecat([3, note(root.add(7).add("0 0 0 -2 -4 0")).struct(motif1d)],
+                           [3, note(root.add(7).add("0 1 0  1  0 1")).struct(motif1e)],
+                           [2, note(root.add(7).add("0 1 0 0")).struct(motif2)])
+
+$3: cat(chorus_line1, chorus_line2, chorus_line3, chorus_line4)
+  .sound("gm_synth_strings_1").slow(2)
+  .clip(1/2)._punchcard()
+// VERSE
+//[[- t][t t][t t]] [[- t][t t][t t]] [t - t t]] // 3-3-2
+
+
+// same chorus motives, but one extra note for one, one muted note for the other
+
+// notes still follow chords, with ornaments: neighbor tones up and down
+// little mute on second repetition of line 1
+let verse_line1 = timecat([3, note(root.add(0)).struct(motif1b)],
+                          [3, note(root.add("0 0 2 -1 -5 -5")).struct(motif1b)],
+                          [2, note(root.add("- -5 -7 -5")).struct(motif2)]) //DELAYED ENTRY
+
+let verse_line2 = timecat([3, note(root.add(0)).struct(motif1b).mask(0)],
+                          [3, note(root.add("0 -5 0 0 2 3 ")).struct(motif1b)],
+                          [2, note(root.add("2 - 0 0")).struct(motif2)])
+
+$1: cat(verse_line1, verse_line2)
+  .sound("sawtooth").slow(2)
+  .clip(1/2)._punchcard()
+
+// PRE-chorus
+
+// One single rhythmic motif here, less dense, 4-beat-long (repeated 4 times)
+// ABAC 
+let motif3 = "[t t [t t][t t]]" 
+let pre_root = "eb3"
+
+let pre_line0 =  note(pre_root.add("0!4 0 0 2 0")).struct(motif3)
+let pre_line1 = note(pre_root.add("-1!4 - - -3 -1")).struct(motif3)
+let pre_line2 = note(pre_root.add("4!4 9 4 2 0")).struct(motif3)
+
+$2: cat(pre_line0, pre_line1, pre_line0, pre_line2)
+  .sound("piano").slow(1)
+  .clip(1/2)._punchcard()// B-CHORUS (complementary chorus) (partial transcript)
+// A derivative of the pre-chorus and the final part of the chorus
+
+let motif3b = "[t - [t t][t t]]" // 
+let chorus_b_line1 =  note(pre_root.add("4@2 - - 0 2 4@2")).struct(motif3b)
+
+let chorus_b_line2 =  note(pre_root.add("4@2 5 4 2 4 -")).struct(motif3b)
+
+
+$4: cat(chorus_b_line1, chorus_b_line1, chorus_b_line2)
+  .sound("gm_synth_strings_1")
+  .clip(1/2)._punchcard()
+  
+// ======= RHYTHM SECTION ========
+  
+$10: stack(
+  s("[bd - ]*2").bank("d110"),
+  s("[ - sd]*2").bank("d110").decay(0.25),
+  s("[hh*4]*2").bank("tr808").decay(0.15)
+  )
+  .color('cyan').gain(0.3)
+  ._punchcard({height:16, labels:1})
+
+$11: chord(chorus_chords).struct("t*8").voicing()
+  .sound("gm_clavinet").clip(0.5)
+  .room(.5).gain(0.2)
+
+// piano riff (hook)
+$12: note("[-!7 [- g2 c3 c3]]/4")
+  .sound("piano").decay(0.85)
